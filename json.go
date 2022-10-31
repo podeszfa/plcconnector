@@ -40,14 +40,10 @@ type JS struct {
 	Templates map[string]jsTemplates `json:"templates"`
 }
 
-// ImportJSON .
-func (p *PLC) ImportJSON(file string) error {
-	data, err := os.ReadFile(file)
-	if err != nil {
-		return err
-	}
+// UseSymbols .
+func (p *PLC) UseSymbols(symbols string) error {
 	var db JS
-	err = json.Unmarshal(data, &db)
+	err := json.Unmarshal([]byte(symbols), &db)
 	if err != nil {
 		return err
 	}
@@ -117,19 +113,24 @@ func (p *PLC) ImportJSON(file string) error {
 	return nil
 }
 
+// ImportSymbols .
+func (p *PLC) ImportSymbols(file string) error {
+	data, err := os.ReadFile(file)
+	if err != nil {
+		return err
+	}
+	return p.UseSymbols(string(data))
+}
+
 type memJS struct {
 	Rx   []uint8 `json:"rx"`
 	Read bool    `json:"read"`
 }
 
-// ImportMemoryJSON .
-func (p *PLC) ImportMemoryJSON(file string) error {
-	data, err := os.ReadFile(file)
-	if err != nil {
-		return err
-	}
+// UseMemory .
+func (p *PLC) UseMemory(memory string) error {
 	db := make(map[string]memJS)
-	err = json.Unmarshal(data, &db)
+	err := json.Unmarshal([]byte(memory), &db)
 	if err != nil {
 		return err
 	}
@@ -145,7 +146,7 @@ func (p *PLC) ImportMemoryJSON(file string) error {
 		if c.Read {
 			if len(c.Rx) != len(tag.data) {
 				if p.Verbose {
-					fmt.Println(file, "data length mismatch", n)
+					fmt.Println("memory JSON data length mismatch", n)
 				}
 				continue
 				// return errors.New("data length mismatch " + n)
@@ -155,4 +156,14 @@ func (p *PLC) ImportMemoryJSON(file string) error {
 	}
 
 	return nil
+}
+
+// ImportMemory .
+func (p *PLC) ImportMemory(file string) error {
+	data, err := os.ReadFile(file)
+	if err != nil {
+		return err
+	}
+
+	return p.UseMemory(string(data))
 }

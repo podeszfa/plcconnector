@@ -80,20 +80,20 @@ func main() {
 	if len(os.Args) >= 2 {
 		eds = os.Args[1]
 	}
-	p, err := plc.Init(eds)
+	p, err := plc.InitEDS(eds)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
 	if len(os.Args) >= 3 {
-		err = p.ImportJSON(os.Args[2])
+		err = p.ImportSymbols(os.Args[2])
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
 		if len(os.Args) >= 4 {
-			err = p.ImportMemoryJSON(os.Args[3])
+			err = p.ImportMemory(os.Args[3])
 			if err != nil {
 				fmt.Println(err)
 				return

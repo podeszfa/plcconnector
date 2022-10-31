@@ -58,32 +58,26 @@ func (p *PLC) getEDSInt(section string, item string) (int, error) {
 	return 0, errNotFound
 }
 
-func (p *PLC) loadEDS(fn string) error {
+func (p *PLC) loadEDS(eds []byte) error {
 	var (
-		orig_f []byte
-		f      []byte
-		err    error
-		gz     = false
+		f   []byte
+		err error
+		gz  = false
 	)
 
-	if fn == "" {
-		orig_f = defEDS
-	} else {
-		orig_f, err = os.ReadFile(fn)
-		if err != nil {
-			return err
-		}
+	if len(eds) == 0 {
+		eds = defEDS
 	}
 
-	if len(orig_f) >= 10 && orig_f[0] == 0x1f && orig_f[1] == 0x8b {
+	if len(eds) >= 10 && eds[0] == 0x1f && eds[1] == 0x8b {
 		gz = true
-		f, err = loadGzip(orig_f)
+		f, err = loadGzip(eds)
 		if err != nil {
 			return nil
 		}
 	} else {
-		f = make([]byte, len(orig_f))
-		copy(f, orig_f)
+		f = make([]byte, len(eds))
+		copy(f, eds)
 	}
 
 	p.eds = make(map[string]map[string]string)
@@ -262,7 +256,7 @@ func (p *PLC) loadEDS(fn string) error {
 		gz.Close()
 		in.data = buf.Bytes()
 	} else {
-		in.data = orig_f
+		in.data = eds
 	}
 
 	chksum := 0

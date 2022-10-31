@@ -15,6 +15,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net"
+	"os"
 	"sync"
 	"time"
 )
@@ -44,8 +45,8 @@ type PLC struct {
 	Timeout     time.Duration
 }
 
-// Init initialize library. Must be called first.
-func Init(eds string) (*PLC, error) {
+// Init initializes library. Must be called first.
+func Init(eds []byte) (*PLC, error) {
 	var p PLC
 	p.Class = make(map[int]*Class)
 	p.tags = make(map[string]*Tag)
@@ -59,6 +60,16 @@ func Init(eds string) (*PLC, error) {
 	}
 
 	return &p, nil
+}
+
+// InitEDS initializes library. Must be called first.
+func InitEDS(eds string) (*PLC, error) {
+	edsB, err := os.ReadFile(eds)
+	if err != nil {
+		return nil, err
+	}
+
+	return Init(edsB)
 }
 
 func (p *PLC) debug(args ...interface{}) {

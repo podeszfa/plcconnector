@@ -44,7 +44,7 @@ func call(service int, status int, tag *plc.Tag) {
 
 //export plcconnector_init
 func plcconnector_init() {
-	p, _ = plc.Init("")
+	p, _ = plc.Init(nil)
 }
 
 //export plcconnector_set_verbose
