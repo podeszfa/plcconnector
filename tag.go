@@ -830,7 +830,7 @@ func (t *Tag) DataString() string {
 }
 
 // CreateTag .
-func (p *PLC) CreateTag(typ string, name string) {
+func (p *PLC) CreateTag(typ string, name string) error {
 	var t Tag
 	st, ok := p.tids[typ]
 	if ok {
@@ -838,9 +838,9 @@ func (p *PLC) CreateTag(typ string, name string) {
 		t.Type = TypeStructHead | int(t.st.h)
 		t.data = make([]uint8, t.st.l)
 	} else {
-		udt, n := udtFromString(typ)
-		if udt == nil {
-			return
+		udt, n, err := udtFromString(typ)
+		if err != nil {
+			return err
 		}
 		if n != "" {
 			p.newUDT(udt, n, 0, 0)
@@ -854,6 +854,7 @@ func (p *PLC) CreateTag(typ string, name string) {
 	}
 	t.Name = name
 	p.AddTag(t)
+	return nil
 }
 
 func (p *PLC) tagError(service int, status int, tag *Tag) {

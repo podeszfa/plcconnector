@@ -2,6 +2,7 @@ package plcconnector
 
 import (
 	"bytes"
+	"errors"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -20,7 +21,10 @@ type udtT struct {
 
 // NewUDT .
 func (p *PLC) NewUDT(udt string) error {
-	u, n := udtFromString(udt)
+	u, n, err := udtFromString(udt)
+	if err != nil {
+		return err
+	}
 	p.newUDT(u, n, 0, 0)
 	return nil
 }
@@ -173,14 +177,18 @@ func (p *PLC) structHelper(a *Tag, t reflect.Type, fs int, ln int) {
 }
 
 // INT name[1, 2, 3]
-//   1    2 3  4  5
+//
+//	1    2 3  4  5
 var udtr = regexp.MustCompile(`(\w+)\s*(\w*)\s*\[*\s*(\d*)\s*,*\s*(\d*)\s*,*\s*(\d*)\s*\]*`)
 
-func udtFromString(udt string) ([]udtT, string) {
+func udtFromString(udt string) ([]udtT, string, error) {
 	t := []udtT{}
 
 	if !strings.HasPrefix(udt, "DATATYPE") {
 		sb := udtr.FindStringSubmatch(udt)
+		if len(sb) < 5 {
+			return nil, "", errors.New("udt error 1")
+		}
 		tn := udtT{}
 		tn.T = sb[1]
 		i, err := strconv.Atoi(sb[3])
@@ -197,7 +205,7 @@ func udtFromString(udt string) ([]udtT, string) {
 		}
 
 		t = append(t, tn)
-		return t, ""
+		return t, "", nil
 	}
 	u := strings.FieldsFunc(udt, func(r rune) bool {
 		if unicode.IsSpace(r) || r == ';' || r == '(' || r == ')' {
@@ -205,6 +213,9 @@ func udtFromString(udt string) ([]udtT, string) {
 		}
 		return false
 	})
+	if len(u) < 2 {
+		return nil, "", errors.New("udt error 2")
+	}
 	name := u[1]
 	u = u[2:]
 	booli := 0
@@ -221,9 +232,15 @@ func udtFromString(udt string) ([]udtT, string) {
 			continue
 		}
 
+		if len(u) < i+2 {
+			return nil, "", errors.New("udt error 3")
+		}
 		str := u[i] + " " + u[i+1]
 
 		sb := udtr.FindStringSubmatch(str)
+		if len(sb) < 5 {
+			return nil, "", errors.New("udt error 4")
+		}
 		tn := udtT{}
 		tn.N = sb[2]
 		tn.T = sb[1]
@@ -249,5 +266,5 @@ func udtFromString(udt string) ([]udtT, string) {
 		t = append(t, tn)
 	}
 
-	return t, name
+	return t, name, nil
 }
